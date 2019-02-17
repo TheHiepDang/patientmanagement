@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <script src="http://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript"
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg7kY0p9GwN0-8P-QaTk5v-mObtmvk-sc&libraries=places"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.semanticui.min.css">
+</head>
+
+<body>
+    <div>
+        <table id="patienttbl" class="ui celled table" style="width:100%">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>First name</th>
+                    <th>Last name</th>
+                    <th>Contact number</th>
+                    <th>Address</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+        </table>
+        <button type="button" onclick="newPatientDialog()">Add new patient</button>
+        <input type="checkbox" id="showInactive"> Show inactive (Hidden by default) patient<br>
+</body>
+
+</div>
+
+<div id="newPatientDialog">
+
+    <table>
+        <tr>
+            <td><label>First Name: </label></td>
+            <td><input type="text" id="firstName" /></td>
+        </tr>
+        <tr>
+            <td><label>Last Name: </label></td>
+            <td><input type="text" id="lastName" /></td>
+        </tr>
+        <tr>
+            <td><label>Contact number: </label></td>
+            <td><input type="text" id="contactNo" /></td>
+        </tr>
+        <tr>
+            <td><label>Address Line 1: </label></td>
+            <td><input type="text" id="addressLine1" /></td>
+        </tr>
+        <tr>
+            <td><label>Address Line 2: </label></td>
+            <td><input type="text" id="addressLine2" /></td>
+        </tr>
+        <tr>
+            <td><label>City: </label></td>
+            <td><input type="text" id="city" /></td>
+        </tr>
+        <tr>
+            <td><label>Country: </label></td>
+            <td><input type="text" id="country" /></td>
+        </tr>
+        <tr>
+            <td><label>Postal Code: </label></td>
+            <td><input type="text" id="postalCode" /></td>
+        </tr>
+    </table>
+    <button type="button" onclick="createNewPatient()">Create</button>
+</div>
+
+<div id="editPatientDialog">
+    <div type="hidden" id="id"></div>
+    <div type="hidden" id="addressId"></div>
+    <div type="hidden" id="isHidden"></div>
+    <table>
+        <tr>
+            <td><label>First Name: </label></td>
+            <td><input type="text" id="firstName" /></td>
+        </tr>
+        <tr>
+            <td><label>Last Name: </label></td>
+            <td><input type="text" id="lastName" /></td>
+        </tr>
+        <tr>
+            <td><label>Contact number: </label></td>
+            <td><input type="text" id="contactNo" /></td>
+        </tr>
+        <tr>
+            <td><label>Address Line 1: </label></td>
+            <td><input type="text" id="addressLine1" /></td>
+        </tr>
+        <tr>
+            <td><label>Address Line 2: </label></td>
+            <td><input type="text" id="addressLine2" /></td>
+        </tr>
+        <tr>
+            <td><label>City: </label></td>
+            <td><input type="text" id="city" /></td>
+        </tr>
+        <tr>
+            <td><label>Country: </label></td>
+            <td><input type="text" id="country" /></td>
+        </tr>
+        <tr>
+            <td><label>Postal Code: </label></td>
+            <td><input type="text" id="postalCode" /></td>
+        </tr>
+    </table>
+    <button type="button" onclick="savePatientDetails()">Save</button>
+</div>
+</body>
+
+<script>
+    const appURL = "https://doctoranw.herokuapp.com/";
+
+    let createNewPatient = function () {
+        let firstNameElement = $('#newPatientDialog #firstName');
+        let lastNameElement = $('#newPatientDialog #lastName');
+        let contactNoElement = $('#newPatientDialog #contactNo');
+        if (!firstNameElement.val() || !lastNameElement.val() || !contactNoElement.val()) {
+            if (!firstNameElement.val()) {
+                firstNameElement.attr('style', "border-radius: 5px; border:#FF0000 1px solid;");
+            } else {
+                firstNameElement.attr('style', "");
+            }
+            if (!lastNameElement.val()) {
+                lastNameElement.attr('style', "border-radius: 5px; border:#FF0000 1px solid;");
+            } else {
+                lastNameElement.attr('style', "");
+            }
+            if (!contactNoElement.val()) {
+                contactNoElement.attr('style', "border-radius: 5px; border:#FF0000 1px solid;");
+            } else {
+                contactNoElement.attr('style', "");
+            }
+            return;
+        }
+
+        let data = {
+            firstName: firstNameElement.val(),
+            lastName: lastNameElement.val(),
+            contactNo: contactNoElement.val(),
+            address: [{
+                addressLine1: $('#newPatientDialog #addressLine1').val(),
+                addressLine2: $('#newPatientDialog #addressLine2').val(),
+                city: $('#newPatientDialog #city').val(),
+                country: $('#newPatientDialog #country').val(),
+                postalCode: $('#newPatientDialog #postalCode').val()
+            }]
+        };
+        $.ajax({
+            url: appURL + 'api/patient/create',
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (data) {
+                $('#patienttbl').DataTable().ajax.reload();
+            },
+            error: function (request, error) {
+                console.log(JSON.stringify(error));
+            }
+        });
+    };
+
+    let newPatientDialog = function () {
+        $('#newPatientDialog').dialog('open');
+    };
+
+    let editPatientDialog = function () {
+        $('#editPatientDialog').dialog('open');
+    };
+
+    let deactivateFunction = function (id) {
+        if (id) {
+            console.log("id: " + id);
+            $.ajax({
+                url: appURL + 'api/patient/deactivate?id=' + id,
+                type: 'PUT',
+                success: function (data) {
+                    $('#patienttbl').DataTable().ajax.reload();
+                },
+                error: function (request, error) {
+                    console.log(JSON.stringify(error));
+                }
+            });
+        }
+    };
+
+    let activateFunction = function (id) {
+        if (id) {
+            console.log("id: " + id);
+            $.ajax({
+                url: appURL + 'api/patient/reactivate?id=' + id,
+                type: 'PUT',
+                success: function (data) {
+                    $('#patienttbl').DataTable().ajax.reload();
+                },
+                error: function (request, error) {
+                    console.log(JSON.stringify(error));
+                }
+            });
+        }
+    };
+
+    let deleteFunction = function (id) {
+        if (id) {
+            console.log("id: " + id);
+            $.ajax({
+                url: appURL + 'api/patient/delete?id=' + id,
+                type: 'DELETE',
+                success: function (data) {
+                    $('#patienttbl').DataTable().ajax.reload();
+                },
+                error: function (request, error) {
+                    console.log(JSON.stringify(error));
+                }
+            });
+        }
+    };
+
+    let editFunction = function (id) {
+        if (id) {
+            console.log("id: " + id);
+            $.ajax({
+                url: appURL + 'api/patient/' + id,
+                success: function (data) {
+                    $('#editPatientDialog').dialog('open');
+                    $('#editPatientDialog #id').val(data.id);
+                    $('#editPatientDialog #isHidden').val(data.isHidden);
+                    $('#editPatientDialog #firstName').val(data.firstName);
+                    $('#editPatientDialog #lastName').val(data.lastName);
+                    $('#editPatientDialog #contactNo').val(data.contactNo);
+                    $('#editPatientDialog #addressId').val(data.address[0].id);
+                    $('#editPatientDialog #addressLine1').val(data.address[0].addressLine1);
+                    $('#editPatientDialog #addressLine2').val(data.address[0].addressLine2);
+                    $('#editPatientDialog #city').val(data.address[0].city);
+                    $('#editPatientDialog #country').val(data.address[0].country);
+                    $('#editPatientDialog #postalCode').val(data.address[0].postalCode);
+                },
+                error: function (request, error) {
+                    console.log(JSON.stringify(error));
+                }
+            });
+        }
+    };
+
+    let savePatientDetails = function () {
+        let data = {
+            isHidden: $('#editPatientDialog #isHidden').val(),
+            id: $('#editPatientDialog #id').val(),
+            firstName: $('#editPatientDialog #firstName').val(),
+            lastName: $('#editPatientDialog #lastName').val(),
+            contactNo: $('#editPatientDialog #contactNo').val(),
+            address: [
+                {
+                    id: $('#editPatientDialog #addressId').val(),
+                    addressLine1: $('#editPatientDialog #addressLine1').val(),
+                    addressLine2: $('#editPatientDialog #addressLine2').val(),
+                    city: $('#editPatientDialog #city').val(),
+                    country: $('#editPatientDialog #country').val(),
+                    postalCode: $('#editPatientDialog #postalCode').val()
+                }
+            ]
+        };
+        $.ajax({
+            url: appURL + 'api/patient/update',
+            type: 'PUT',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (data) {
+                $('#patienttbl').DataTable().ajax.reload();
+            },
+            error: function (request, error) {
+                console.log(JSON.stringify(error));
+            }
+        });
+    };
+
+    $(document).ready(function () {
+        //Google places suggestion
+        let acAD1 = new google.maps.places.Autocomplete($("#addressLine1").get(0), {});
+        let acAD2 = new google.maps.places.Autocomplete($("#addressLine2").get(0), {});
+        let acPC = new google.maps.places.Autocomplete($("#postalCode").get(0), {});
+
+        google.maps.event.addListener(acAD1, 'place_changed', function () {
+            let place = acAD1.getPlace();
+            console.log(place.address_components);
+        });
+
+        google.maps.event.addListener(acAD2, 'place_changed', function () {
+            let place = acAD2.getPlace();
+            console.log(place.address_components);
+        });
+
+        google.maps.event.addListener(acPC, 'place_changed', function () {
+            let place = acPC.getPlace();
+            console.log(place.address_components);
+        });
+        //END: Google places suggestion
+
+        $('#newPatientDialog, #editPatientDialog').dialog({
+            autoOpen: false
+        });
+        $('#newPatientDialog, #editPatientDialog').css("background-color", "gray")
+
+        //Datatables
+        let table = $('#patienttbl').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": appURL + "api/patient/ajax", "type": "post", contentType: "application/json", data: function (d) {
+                    d.showHidden = $("#showInactive").prop('checked');
+                    return JSON.stringify(d);
+                },
+                "dataSrc": 'data'
+            },
+            "sAjaxDataProp": "[]",
+            "aoColumns": [
+                { "mData": "id" },
+                { "mData": "firstName" },
+                { "mData": "lastName" },
+                { "mData": "contactNo" },
+                {
+                    "mData": "address", "mRender": function (data, type, full) {
+                        return data[0].addressLine1 + ", " + data[0].city + ", " + data[0].country;
+                    }
+                },
+                {
+                    "mData": null,
+                    "bSortable": false,
+                    "mRender": function (data, type, full) {
+                        if (!$("#showInactive").prop('checked')) {
+                            return '<button type = "button" onclick="deactivateFunction(' + data.id + ')">' + 'Deactivate' + '</button>';
+                        } else {
+                            return '<button type = "button" onclick="activateFunction(' + data.id + ')">' + 'Activate' + '</button>';
+                        }
+                    }
+                },
+                {
+                    "mData": null,
+                    "bSortable": false,
+                    "mRender": function (data, type, full) {
+                        return '<button type = "button" onclick="deleteFunction(' + data.id + ')">' + 'Delete' + '</button>';
+                    }
+                },
+                {
+                    "mData": null,
+                    "bSortable": false,
+                    "mRender": function (data, type, full) {
+                        return '<button type = "button" onclick="editFunction(' + data.id + ')">' + 'Edit' + '</button>';
+                    }
+                }
+            ]
+        });
+
+        $('#patienttbl').on('click', 'tr', function () {
+            if (table.row(this).data()) {
+                let id = table.row(this).data().id;
+            }
+        });
+        //END: Datatables
+        //Misc
+        $('#showInactive').change(function () {
+            $('#patienttbl').DataTable().ajax.reload();
+        });
+    });
+
+</script>
+
+</html>
