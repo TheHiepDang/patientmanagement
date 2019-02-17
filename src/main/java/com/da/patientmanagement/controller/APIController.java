@@ -6,7 +6,6 @@ import com.da.patientmanagement.service.PatientService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -16,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/patient")
 @Slf4j
-@CrossOrigin("null")
 public class APIController {
 
     @Autowired
