@@ -26,7 +26,7 @@ public class Address {
     private String country;
     @Column(name = "POSTALCODE")
     private String postalCode;
-    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JsonBackReference
     private Patient patient;
 }

@@ -2,23 +2,20 @@ package com.da.patientmanagement.dto;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
 @EqualsAndHashCode(exclude = "address")
 public class PatientDTO {
     private Long id;
-    @NotBlank
+    @NotEmpty
     private String firstName;
-    @NotBlank
+    @NotEmpty
     private String lastName;
-    @NotBlank
+    @NotEmpty
     private String contactNo;
     private List<AddressDTO> address;
-    private boolean isActive = true;
-    private boolean isHidden = false;
+    private Boolean isHidden = false;
 }

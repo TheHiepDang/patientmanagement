@@ -1,6 +1,5 @@
 package com.da.patientmanagement.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -15,7 +14,7 @@ import java.util.List;
 @EqualsAndHashCode(exclude = "address")
 public class Patient {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "FIRSTNAME")
     private String firstName;
@@ -25,8 +24,11 @@ public class Patient {
     private String contactNo;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "patient")
     private List<Address> address;
-    @Column(name = "ISACTIVE")
-    private boolean isActive;
     @Column(name = "ISHIDDEN")
-    private boolean isHidden;
+    private Boolean isHidden;
+
+    public void setAddress(List<Address> address) {
+        this.address = address;
+        address.forEach(address1 -> address1.setPatient(this));
+    }
 }

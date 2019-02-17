@@ -1,5 +1,7 @@
 package com.da.patientmanagement.controller;
 
+import com.da.patientmanagement.dto.DTOWrapper;
+import com.da.patientmanagement.dto.DatatablesResponseDTO;
 import com.da.patientmanagement.dto.PatientDTO;
 import com.da.patientmanagement.model.AjaxRequestBody;
 import com.da.patientmanagement.service.PatientService;
@@ -9,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.Validator;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/patient")
@@ -20,33 +20,35 @@ public class APIController {
     @Autowired
     private PatientService patientService;
 
-    @Autowired
-    protected Validator validator;
-
-    @GetMapping("/all")
-    public List<PatientDTO> findAllPageable(Integer page, Integer size) {
-        return patientService.findAllPageable(page, size);
+    @GetMapping("/{id}")
+    public PatientDTO findById(@PathVariable("id") Long id) {
+        return patientService.findById(id);
     }
 
     @PostMapping("/ajax")
-    public List<PatientDTO> findAllPageableAjax(@RequestBody AjaxRequestBody body) {
+    public DatatablesResponseDTO findAllPageableAjax(@RequestBody AjaxRequestBody body) {
+        DatatablesResponseDTO datatablesResponseDTO = new DatatablesResponseDTO();
+        DTOWrapper dtoWrapper;
         if (body.getOrder().length > 0) {
             body.getOrder()[0].setColumnName(body.getColumns()[body.getOrder()[0].getColumn()].getData());
         }
         if (StringUtils.isEmpty(body.getSearch().getValue())) {
-            return patientService.findAllPageableAjax(body.getStart(), body.getLength(), body.getOrder());
+            dtoWrapper = patientService.findAllPageableAjax(body.getStart(), body.getLength(), body.getShowHidden(), body.getOrder());
         } else {
             String searchValue = body.getSearch().getValue();
-            return patientService.searchByCriteriaOrderByFirstName(searchValue, searchValue, searchValue, body.getStart(), body.getLength());
+            dtoWrapper = patientService.searchByCriteriaOrderByFirstName(searchValue, searchValue, searchValue, body.getStart(), body.getLength(), body.getShowHidden());
         }
+
+        datatablesResponseDTO.setDraw(body.getDraw());
+        datatablesResponseDTO.setData(dtoWrapper.getPatientDTOList().toArray());
+        datatablesResponseDTO.setRecordsTotal(dtoWrapper.getPatientDTOList().size());
+        datatablesResponseDTO.setRecordsFiltered(dtoWrapper.getTotalRecords());
+
+        return datatablesResponseDTO;
     }
 
-    @GetMapping("/filter")
-    public List<PatientDTO> findAllByIsActive(@RequestParam Boolean isActive, Integer page, Integer size) {
-        return patientService.findAllByIsActive(isActive, page, size);
-    }
 
-    @PutMapping("/softDelete")
+    @PutMapping("/deactivate")
     public int softDelete(@RequestParam Long id) {
         if (patientService.patientExistById(id)) {
             return patientService.softDeletePatient(id);
@@ -55,13 +57,15 @@ public class APIController {
         }
     }
 
-    @GetMapping("/searchBy")
-    public List<PatientDTO> searchByCriteriaOrderByFirstName(@RequestParam(required = false) String firstName,
-                                                             @RequestParam(required = false) String lastName,
-                                                             @RequestParam(required = false) String country,
-                                                             Integer page, Integer size) {
-        return patientService.searchByCriteriaOrderByFirstName(firstName, lastName, country, page, size);
+    @PutMapping("/reactivate")
+    public int reactivate(@RequestParam Long id) {
+        if (patientService.patientExistById(id)) {
+            return patientService.reactivatePatient(id);
+        } else {
+            return -1;
+        }
     }
+
 
     @PostMapping("/create")
     public PatientDTO createNewPatient(@RequestBody @Valid PatientDTO patient) {
@@ -79,6 +83,10 @@ public class APIController {
 
     @DeleteMapping("/delete")
     public void deletePatient(@RequestParam Long id) {
-        patientService.deletePatient(id);
+        if (patientService.patientExistById(id)) {
+            patientService.deletePatient(id);
+        } else {
+            log.info("Nothing changed. Patient with id {} not found", id);
+        }
     }
 }
